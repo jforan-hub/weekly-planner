@@ -101,6 +101,15 @@ select {
 .item.key { background: var(--gold-soft); border-radius: 8px; padding-left: .5rem; padding-right: .5rem; }
 .verify { font-size: .88rem; color: var(--muted); }
 
+/* Friday dinner picks */
+.eat { border: 1px solid var(--line); border-top: 4px solid var(--gold); border-radius: var(--radius); padding: 1rem; }
+.eat-intro { margin: 0 0 .75rem; color: var(--muted); }
+.picks { list-style: none; margin: 0; padding: 0; }
+.picks li { padding: .6rem 0; border-bottom: 1px solid var(--line); }
+.picks li:last-child { border-bottom: 0; }
+.picks strong { display: block; color: var(--navy); }
+.picks p { margin: .15rem 0 0; }
+
 /* Tips, season, changelog */
 .tips { background: var(--panel); border-radius: var(--radius); padding: 1rem 1rem .5rem; }
 .tips ul { margin: 0; padding-left: 1.2rem; }
@@ -128,7 +137,7 @@ footer p { margin: 0; }
 @media print {
   @page { margin: 0.6in; }
   body { font-size: 11pt; color: var(--print-ink); background: var(--surface); }
-  .site-head, #controls, #tips, #season, #changelog, footer, button, select, input, .no-print { display: none !important; }
+  .site-head, #controls, #eat, #tips, #season, #changelog, footer, button, select, input, .no-print { display: none !important; }
   main, .wrap { padding: 0; max-width: none; }
   #plan { margin: 0; }
   .plan-head { border-left: 0; padding-left: 0; }
@@ -197,6 +206,15 @@ footer p { margin: 0; }
       <div id="days"></div>
     </section>
 
+    <section id="eat" aria-labelledby="eat-title">
+      <div class="eat">
+        <h2 class="section-title" id="eat-title">Where to eat Friday night</h2>
+        <p class="eat-intro" id="eat-intro"></p>
+        <ul class="picks" id="eat-list"></ul>
+        <div id="eat-verify"></div>
+      </div>
+    </section>
+
     <section id="tips" aria-labelledby="tips-title">
       <div class="tips">
         <h2 class="section-title" id="tips-title">First-time visitors</h2>
@@ -219,7 +237,7 @@ footer p { margin: 0; }
 
 <footer>
   <div class="wrap">
-    <p>Built by [YOUR NAME], MBA 70374, University of Notre Dame. Unofficial; not affiliated with the University or Athletics.</p>
+    <p>Built by Jameson Foran, MBA 70374, University of Notre Dame. Unofficial; not affiliated with the University or Athletics.</p>
   </div>
 </footer>
 
@@ -323,6 +341,16 @@ const ITINERARY = {
       { time: "10:00", arrivals: ["thu", "fri", "sat"], title: "Late breakfast", text: "Sleep in, check out, and have a slow breakfast. Many visitors go to Sunday Mass at the Basilica first.", verify: true },
       { time: "11:30", arrivals: ["thu", "fri", "sat"], title: "Drive out", text: "Sunday traffic is lighter than Saturday night. Heading to Chicago? It is on Central Time, one hour behind South Bend." }
     ]
+  },
+  eat: {
+    intro: "Jameson's three picks for {friday}. Football Fridays book up early, so reserve ahead.",
+    introNoGame: "Jameson's three picks for the Friday before a home game. Football Fridays book up early, so reserve ahead.",
+    picks: [
+      { name: "Rocco's", text: "Classic pizza and Italian, a longtime favorite close to campus." },
+      { name: "The Lauber", text: "A local favorite for a relaxed Friday dinner." },
+      { name: "Café Navarre", text: "The dressier option: upscale dinner in downtown South Bend." }
+    ],
+    verify: "Hours and reservations change on game weekends; check with each restaurant before you go."
   },
   tips: [
     { text: "All times on this page are Eastern Time (ET), the time zone in South Bend." },
@@ -606,6 +634,22 @@ function renderPlan() {
   });
 }
 
+function renderEat() {
+  const game = selectedGame();
+  const e = ITINERARY.eat;
+  $("eat-intro").textContent = game ? fill(e.intro, { friday: fmtDate(game.date, -1, "day") }) : e.introNoGame;
+  const ul = $("eat-list");
+  ul.textContent = "";
+  e.picks.forEach((p) => {
+    ul.appendChild(el("li", null, [el("strong", { text: p.name }), el("p", { text: p.text })]));
+  });
+  const v = $("eat-verify");
+  v.textContent = "";
+  if (e.verify) {
+    v.appendChild(el("p", { className: "verify", text: e.verify }));
+  }
+}
+
 function renderTips() {
   const ul = $("tips-list");
   ul.textContent = "";
@@ -653,6 +697,7 @@ initState();
 renderHeader();
 renderControls();
 renderPlan();
+renderEat();
 renderTips();
 renderSeason();
 renderChangelog();
@@ -661,6 +706,7 @@ $("game").addEventListener("change", (e) => {
   state.gameDate = e.target.value;
   save("game", state.gameDate);
   renderPlan();
+  renderEat();
 });
 $("print").addEventListener("click", () => window.print());
 setInterval(renderHeader, 30000);
